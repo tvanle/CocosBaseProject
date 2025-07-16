@@ -1,18 +1,37 @@
-﻿// Main exports for CocosTask system
+﻿import { CocosTaskAnimation } from './CocosTaskAnimation';
+import { CocosTaskDelay } from './CocosTaskDelay';
+import { CocosTaskUtility } from './CocosTaskUtility';
+import { CocosTaskWait } from './CocosTaskWait';
+
+// Main exports for CocosTask system
 export { CancellationToken, CancellationTokenSource } from './CancellationToken';
-export { CocosTask } from './CocosTask';
 export { CocosTaskDelay } from './CocosTaskDelay';
 export { CocosTaskWait } from './CocosTaskWait';
 export { CocosTaskAnimation } from './CocosTaskAnimation';
 export { CocosTaskUtility } from './CocosTaskUtility';
 
+// Import the core CocosTask class for re-export
+import { CocosTask as CocosTaskClass } from './CocosTask';
+
 // Re-export for convenience (similar to UniTask namespace)
 export namespace CocosTask {
-    // Basic operations
-    export const Delay = CocosTaskDelay.delay;
+    // Core static methods from CocosTask class
+    export const delay = CocosTaskClass.delay;
+    export const whenAll = CocosTaskClass.whenAll;
+    export const whenAny = CocosTaskClass.whenAny;
+    export const fromResult = CocosTaskClass.fromResult;
+    export const fromPromise = CocosTaskClass.fromPromise;
+    export const fromException = CocosTaskClass.fromException;
+    export const fromCanceled = CocosTaskClass.fromCanceled;
+    export const completedTask = CocosTaskClass.completedTask;
+
+    // Basic operations (capitalized for UniTask style)
+    export const Delay = CocosTaskClass.delay;
     export const DelayFrame = CocosTaskDelay.delayFrame;
     export const NextFrame = CocosTaskDelay.nextFrame;
     export const EndOfFrame = CocosTaskDelay.endOfFrame;
+    export const WhenAll = CocosTaskClass.whenAll;
+    export const WhenAny = CocosTaskClass.whenAny;
 
     // Wait operations
     export const WaitUntil = CocosTaskWait.waitUntil;
@@ -41,4 +60,11 @@ export namespace CocosTask {
     export const WithTimeout = CocosTaskUtility.withTimeout;
     export const Sequence = CocosTaskUtility.sequence;
     export const ParallelLimit = CocosTaskUtility.parallelLimit;
+
+    // Factory methods
+    export const FromResult = CocosTaskClass.fromResult;
+    export const FromPromise = CocosTaskClass.fromPromise;
+    export const FromException = CocosTaskClass.fromException;
+    export const FromCanceled = CocosTaskClass.fromCanceled;
+    export const CompletedTask = CocosTaskClass.completedTask;
 }

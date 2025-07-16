@@ -1,4 +1,4 @@
-﻿import { Node, Vec3, tween, Tween } from 'cc';
+﻿import { Node, Vec3, tween, Tween, UIOpacity } from 'cc';
 import { CocosTask } from './CocosTask';
 import { CancellationToken } from './CancellationToken';
 
@@ -47,10 +47,32 @@ export class CocosTaskAnimation {
 
     // Fade to alpha (using UIOpacity component)
     static toAlpha(node: Node, targetAlpha: number, duration: number, cancellationToken?: CancellationToken): CocosTask<void> {
-        const tweenInstance = tween(node).to(duration, {
-            opacity: Math.round(targetAlpha * 255)
-        });
-        return CocosTaskAnimation.waitForCompletion(tweenInstance, cancellationToken);
+        return new CocosTask(new Promise<void>((resolve, reject) => {
+            if (cancellationToken?.isCancellationRequested) {
+                reject(new Error('OperationCanceledException'));
+                return;
+            }
+
+            let uiOpacity = node.getComponent(UIOpacity);
+            if (!uiOpacity) {
+                uiOpacity = node.addComponent(UIOpacity);
+            }
+
+            const tweenInstance = tween(uiOpacity).to(duration, {
+                opacity: Math.round(targetAlpha * 255)
+            }).call(() => {
+                if (cancellationToken?.isCancellationRequested) {
+                    reject(new Error('OperationCanceledException'));
+                } else {
+                    resolve();
+                }
+            }).start();
+
+            cancellationToken?.register(() => {
+                tweenInstance.stop();
+                reject(new Error('OperationCanceledException'));
+            });
+        }), cancellationToken);
     }
 
     // Fade in

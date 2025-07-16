@@ -22,7 +22,7 @@ export class CocosTaskUtility {
         baseDelayMs: number = 1000,
         cancellationToken?: CancellationToken
     ): CocosTask<T> {
-        return new CocosTask(async () => {
+        return new CocosTask((async () => {
             let lastError: Error | null = null;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 cancellationToken?.throwIfCancellationRequested();
@@ -37,7 +37,7 @@ export class CocosTaskUtility {
                 }
             }
             throw lastError!;
-        }, cancellationToken);
+        })(), cancellationToken);
     }
 
     // Execute action repeatedly
@@ -46,7 +46,7 @@ export class CocosTaskUtility {
         count: number,
         cancellationToken?: CancellationToken
     ): CocosTask<T[]> {
-        return new CocosTask(async () => {
+        return new CocosTask((async () => {
             const results: T[] = [];
             for (let i = 0; i < count; i++) {
                 cancellationToken?.throwIfCancellationRequested();
@@ -54,7 +54,7 @@ export class CocosTaskUtility {
                 results.push(result);
             }
             return results;
-        }, cancellationToken);
+        })(), cancellationToken);
     }
 
     // Execute action forever
@@ -63,12 +63,12 @@ export class CocosTaskUtility {
         component: Component,
         cancellationToken?: CancellationToken
     ): CocosTask<void> {
-        return new CocosTask(async () => {
+        return new CocosTask((async () => {
             while (!cancellationToken?.isCancellationRequested) {
                 await taskFactory().getResult();
                 await CocosTaskDelay.nextFrame(component, cancellationToken).getResult();
             }
-        }, cancellationToken);
+        })(), cancellationToken);
     }
 
     // Execute action periodically
@@ -78,12 +78,12 @@ export class CocosTaskUtility {
         component: Component,
         cancellationToken?: CancellationToken
     ): CocosTask<void> {
-        return new CocosTask(async () => {
+        return new CocosTask((async () => {
             while (!cancellationToken?.isCancellationRequested) {
                 await taskFactory().getResult();
                 await CocosTask.delay(intervalMs, cancellationToken).getResult();
             }
-        }, cancellationToken);
+        })(), cancellationToken);
     }
 
     // Execute with configurable timeout
@@ -93,7 +93,7 @@ export class CocosTaskUtility {
 
     // Run tasks in sequence
     static sequence<T>(tasks: CocosTask<T>[], cancellationToken?: CancellationToken): CocosTask<T[]> {
-        return new CocosTask(async () => {
+        return new CocosTask((async () => {
             const results: T[] = [];
             for (const task of tasks) {
                 cancellationToken?.throwIfCancellationRequested();
@@ -101,30 +101,28 @@ export class CocosTaskUtility {
                 results.push(result);
             }
             return results;
-        }, cancellationToken);
+        })(), cancellationToken);
     }
 
     // Run tasks in parallel with limit
     static parallelLimit<T>(tasks: CocosTask<T>[], limit: number): CocosTask<T[]> {
-        return new CocosTask(async () => {
+        return new CocosTask((async () => {
             const results: T[] = new Array(tasks.length);
-            const executing: Promise<void>[] = [];
 
-            for (let i = 0; i < tasks.length; i++) {
-                const promise = tasks[i].getResult().then(result => {
-                    results[i] = result;
-                });
+            // Simple approach: run tasks in batches
+            for (let i = 0; i < tasks.length; i += limit) {
+                const batch = tasks.slice(i, i + limit);
+                const batchResults = await Promise.all(
+                    batch.map(task => task.getResult())
+                );
 
-                executing.push(promise);
-
-                if (executing.length >= limit) {
-                    await Promise.race(executing);
-                    executing.splice(executing.findIndex(p => p === promise), 1);
+                // Copy batch results to the correct positions
+                for (let j = 0; j < batchResults.length; j++) {
+                    results[i + j] = batchResults[j];
                 }
             }
 
-            await Promise.all(executing);
             return results;
-        });
+        })());
     }
 }

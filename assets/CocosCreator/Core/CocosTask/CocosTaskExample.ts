@@ -8,6 +8,9 @@ import {
     CocosTaskUtility
 } from './index';
 
+// Import the class separately to avoid namespace confusion
+import { CocosTask as CocosTaskClass } from './CocosTask';
+
 const { ccclass } = _decorator;
 
 @ccclass('CocosTaskExample')
@@ -159,8 +162,8 @@ export class CocosTaskExample extends Component {
         console.log('✓ Parallel tasks took:', Date.now() - startTime2, 'ms');
     }
 
-    private simulateFailableOperation(): CocosTask<void> {
-        return CocosTask.fromPromise(new Promise<void>((resolve, reject) => {
+    private simulateFailableOperation(): CocosTaskClass<void> {
+        return CocosTaskClass.fromPromise(new Promise<void>((resolve, reject) => {
             // 30% chance to succeed, 70% to fail
             if (Math.random() < 0.3) {
                 resolve();
@@ -170,9 +173,9 @@ export class CocosTaskExample extends Component {
         }));
     }
 
-    private generateRandomNumber(): CocosTask<number> {
+    private generateRandomNumber(): CocosTaskClass<number> {
         const randomNum = Math.floor(Math.random() * 100);
-        return CocosTask.fromResult(randomNum);
+        return CocosTaskClass.fromResult(randomNum);
     }
 
     // Example of a complex workflow using CocosTask
@@ -189,7 +192,7 @@ export class CocosTaskExample extends Component {
             await CocosTask.Delay(300, token);
 
             // Step 3: Scale up with fade in
-            await CocosTask.whenAll([
+            await CocosTask.WhenAll([
                 CocosTask.ToScale(this.node, new Vec3(1.5, 1.5, 1.5), 0.4, token),
                 CocosTask.FadeIn(this.node, 0.4, token)
             ]);
@@ -206,7 +209,7 @@ export class CocosTaskExample extends Component {
             }
 
             // Step 5: Return to normal state
-            await CocosTask.whenAll([
+            await CocosTask.WhenAll([
                 CocosTask.ToPosition(this.node, new Vec3(0, 0, 0), 0.8, token),
                 CocosTask.ToScale(this.node, new Vec3(1, 1, 1), 0.8, token)
             ]);
