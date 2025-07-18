@@ -1,62 +1,69 @@
-import { IScreenPresenter, ScreenStatus } from './IScreenPresenter';
+// IScreenManager.ts
+
+import { Node } from 'cc';
+import { IScreenPresenter, ScreenType } from './IScreenPresenter';
+
+/**
+ * Screen configuration
+ */
+export interface ScreenConfig {
+    screenId: string;
+    presenterClass: new() => IScreenPresenter;
+    prefabPath: string;
+    screenType: ScreenType;
+}
 
 /**
  * Interface for Screen Manager
- * Similar to Unity's IScreenManager
  */
 export interface IScreenManager {
     /**
-     * Currently active screen
+     * Register a screen with its configuration
      */
-    currentActiveScreen: IScreenPresenter | null;
+    registerScreen(config: ScreenConfig): void;
 
     /**
-     * Root canvas for normal screens
-     */
-    rootCanvas: any; // Canvas or Node
-
-    /**
-     * Root canvas for overlay/popup screens
-     */
-    overlayCanvas: any; // Canvas or Node
-
-    /**
-     * Open a screen by type/id
+     * Open a screen by ID
      */
     openScreen<T extends IScreenPresenter>(screenId: string, data?: any): Promise<T>;
 
     /**
-     * Close the current screen
+     * Open a popup by ID
+     */
+    openPopup<T extends IScreenPresenter>(screenId: string, data?: any): Promise<T>;
+
+    /**
+     * Close current screen
      */
     closeCurrentScreen(): Promise<void>;
 
     /**
-     * Close a specific screen
+     * Close a specific screen by ID
      */
-    closeScreen(screen: IScreenPresenter): Promise<void>;
+    closeScreen(screenId: string): Promise<void>;
 
     /**
-     * Close all screens
+     * Close all popups
      */
-    closeAllScreens(): Promise<void>;
+    closeAllPopups(): Promise<void>;
 
     /**
-     * Close all overlay screens
+     * Close all screens and popups
      */
-    closeAllOverlayScreens(): Promise<void>;
+    closeAll(): Promise<void>;
 
     /**
-     * Get screen by id
+     * Get current active screen
      */
-    getScreen<T extends IScreenPresenter>(screenId: string): T | null;
+    getCurrentScreen(): IScreenPresenter | null;
 
     /**
-     * Check if screen is active
+     * Get all active popups
      */
-    isScreenActive(screenId: string): boolean;
+    getActivePopups(): IScreenPresenter[];
 
     /**
-     * Clean up all screens
+     * Check if a screen is open
      */
-    cleanup(): void;
+    isScreenOpen(screenId: string): boolean;
 }

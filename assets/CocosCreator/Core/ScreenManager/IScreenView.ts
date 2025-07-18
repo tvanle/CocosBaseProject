@@ -1,8 +1,8 @@
 ﻿import * as cc from 'cc';
 
 export interface IScreenView {
-    rectTransform: cc.Node;
-    isReadyToUse: boolean;
+    uiTransform: cc.UITransform;
+    isReady: boolean;
 
     open(): Promise<void>;
     close(): Promise<void>;

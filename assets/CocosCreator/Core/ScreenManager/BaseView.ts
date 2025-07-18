@@ -1,10 +1,11 @@
-﻿import { _decorator, Component } from 'cc';
-const { ccclass, property } = _decorator;
-import { UIOpacity } from 'cc';
-import { Node } from 'cc';
-import { IScreenView } from './IScreenView';
-import { UIScreenTransition } from './UIScreenTransition';
-import { BlockInputEvents } from 'cc';
+﻿import { _decorator, Component, UITransform} from 'cc';
+
+const {ccclass, property} = _decorator;
+import {UIOpacity} from 'cc';
+import {Node} from 'cc';
+import {IScreenView} from './IScreenView';
+import {UIScreenTransition} from './UIScreenTransition';
+import {BlockInputEvents} from 'cc';
 
 @ccclass('BaseView')
 export class BaseView extends Component implements IScreenView {
@@ -21,20 +22,15 @@ export class BaseView extends Component implements IScreenView {
     public viewDidOpen: (() => void) | null = null;
     public viewDidDestroy: (() => void) | null = null;
 
-    private _isReadyToUse: boolean = false;
-    public get isReadyToUse(): boolean {
-        return this._isReadyToUse;
-    }
-
-    public get rectTransform(): Node {
-        return this.node;
-    }
+    isReady: boolean = false;
+    uiTransform: UITransform;
 
     onLoad() {
-        // Tương tự Awake() trong Unity
         if (!this.viewRoot) {
             this.viewRoot = this.getComponent(UIOpacity);
         }
+
+        this.uiTransform = this.getComponent(UITransform);
 
         if (!this.screenTransition) {
             this.screenTransition = this.getComponent(UIScreenTransition);
@@ -48,31 +44,30 @@ export class BaseView extends Component implements IScreenView {
             console.error(`Cannot find UIScreenTransition component in ${this.node.name} screen`);
         }
 
-        // Đặt opacity ban đầu là 0 để ẩn
         this.updateOpacity(0);
 
-        this.awakeUnityEvent();
-        this._isReadyToUse = true;
+        this.onLoadedEvent();
+        this.isReady = true;
     }
 
     start() {
-        this.startUnityEvent();
+        this.startEvent();
     }
 
     onDestroy() {
-        this.onDestroyUnityEvent();
+        this.onDestroyEvent();
         this.viewDidDestroy?.();
     }
 
-    protected awakeUnityEvent() {
+    protected onLoadedEvent() {
         // Có thể override trong class con
     }
 
-    protected startUnityEvent() {
+    protected startEvent() {
         // Có thể override trong class con
     }
 
-    protected onDestroyUnityEvent() {
+    protected onDestroyEvent() {
         // Có thể override trong class con
     }
 
@@ -107,7 +102,6 @@ export class BaseView extends Component implements IScreenView {
     protected updateOpacity(value: number): void {
         if (this.viewRoot) {
             this.viewRoot.opacity = value;
-            // blocksRaycasts: vô hiệu hóa sự kiện khi opacity < 255
             if (this.blockInputEvents) {
                 this.blockInputEvents.enabled = value < 255;
             }

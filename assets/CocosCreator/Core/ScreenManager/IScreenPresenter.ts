@@ -1,34 +1,51 @@
-import { Node } from 'cc';
+import {Node} from 'cc';
+
+/**
+ * Screen status enum
+ */
+export enum ScreenStatus {
+    None = 0,
+    Loading = 1,
+    Closed = 2,
+    Opened = 3,
+    Destroyed = 5
+}
+
+/**
+ * Screen type enum
+ */
+export enum ScreenType {
+    Screen = 0,
+    Popup = 1
+}
 
 /**
  * Base interface for screen presenters
- * Similar to Unity's IScreenPresenter
  */
 export interface IScreenPresenter {
-    /**
-     * The view associated with this presenter
-     */
-    view: Node | null;
-
-    /**
-     * Whether this screen should close the previous screen when opened
-     */
-    isClosePrevious: boolean;
-
     /**
      * Screen identifier for tracking
      */
     screenId: string;
 
     /**
-     * Initialize the presenter
+     * Screen type (Screen or Popup)
      */
-    initialize(): Promise<void>;
+    screenType: ScreenType;
 
     /**
-     * Bind data to the view
+     * Current status of the screen
      */
-    bindData(data?: any): Promise<void>;
+    status: ScreenStatus;
+    /**
+     * Open the screen
+     */
+    openAsync(): Promise<void>;
+
+    /**
+     * Close the screen
+     */
+    closeAsync(): Promise<void>;
 
     /**
      * Called when the screen is opened
@@ -41,48 +58,7 @@ export interface IScreenPresenter {
     onClosed(): void;
 
     /**
-     * Called when the screen is hidden (covered by another screen)
-     */
-    onHidden(): void;
-
-    /**
-     * Called when the screen is shown again (after being hidden)
-     */
-    onShown(): void;
-
-    /**
-     * Open the screen
-     */
-    openAsync(data?: any): Promise<void>;
-
-    /**
-     * Close the screen
-     */
-    closeAsync(): Promise<void>;
-
-    /**
-     * Dispose/cleanup the presenter
+     * Dispose the screen and clean up resources
      */
     dispose(): void;
-}
-
-/**
- * Screen status enumeration
- * Similar to Unity's ScreenStatus
- */
-export enum ScreenStatus {
-    None = 0,
-    Loading = 1,
-    Opened = 2,
-    Closed = 3,
-    Hidden = 4
-}
-
-/**
- * Screen information attribute
- * Similar to Unity's ScreenInfoAttribute
- */
-export interface ScreenInfo {
-    screenId: string;
-    prefabPath: string;
 }
