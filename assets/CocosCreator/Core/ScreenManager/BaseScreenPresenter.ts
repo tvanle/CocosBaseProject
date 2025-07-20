@@ -41,6 +41,7 @@ export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = an
         await this.bindData();
         this.status = ScreenStatus.Opened;
         await this.view.open();
+        this.view.uiTransform.node.setSiblingIndex(-1);
         this.onOpened();
     }
 
