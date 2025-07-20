@@ -1,4 +1,5 @@
 import {Node} from 'cc';
+import {IScreenView} from "db://assets/CocosCreator/Core/ScreenManager/IScreenView";
 
 /**
  * Screen status enum
@@ -29,6 +30,11 @@ export interface IScreenPresenter {
     screenId: string;
 
     /**
+     * Node representing the screen
+     */
+    viewName: string;
+
+    /**
      * Screen type (Screen or Popup)
      */
     screenType: ScreenType;
@@ -37,6 +43,14 @@ export interface IScreenPresenter {
      * Current status of the screen
      */
     status: ScreenStatus;
+    /**
+     * View associated with the screen
+     */
+    setView(view: IScreenView): Promise<void>;
+    /**
+     * Set model for the screen presenter
+     */
+    setModel(model: any): void;
     /**
      * Open the screen
      */
@@ -62,3 +76,5 @@ export interface IScreenPresenter {
      */
     dispose(): void;
 }
+
+export interface IScreenPresenterWithModel<TModel = any> extends IScreenPresenter {}

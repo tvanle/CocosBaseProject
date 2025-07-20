@@ -7,6 +7,7 @@ import {ScreenHelper} from "db://assets/CocosCreator/Core/ScreenManager/ScreenHe
 export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = any> implements IScreenPresenter{
     public view: TView | null = null;
     public screenId = '';
+    public abstract viewName : string;
     public screenType = ScreenType.Screen;
     public status = ScreenStatus.None;
     public model: TModel | null = null;
@@ -17,6 +18,10 @@ export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = an
         this.screenId = ScreenHelper.getScreenId(view.constructor as { new(): TView });
         //Todo: await this.view.isReady
         this.onViewReady();
+    }
+
+    setModel(model: TModel) {
+        this.model = model;
     }
 
     setViewParent(parent: Node) {
