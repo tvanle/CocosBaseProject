@@ -9,7 +9,7 @@ interface PoolInfo {
 }
 
 @ccclass('ObjectPoolManager')
-export class ObjectPoolMnhéanager extends Component {
+export class ObjectPoolManager extends Component {
     private static _instance: ObjectPoolManager | null = null;
     private _pools = new Map<string, PoolInfo>();
 
