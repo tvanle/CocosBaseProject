@@ -65,6 +65,12 @@ export class ScreenManager {
             screen.setModel(options.model);
         }
 
+        // Set ViewSiblingIndex to push view to the end if no current screen
+        const screenInfo = this.registeredScreens.get(type);
+        if (!screenInfo?.isPopup && !this.currentScreen && screen.view) {
+            screen.view.node.setSiblingIndex(-1); // Push to end
+        }
+
         // Handle transition if specified
         if (options.transition && screen.view) {
             const transition = new ScreenTransition();
@@ -76,7 +82,6 @@ export class ScreenManager {
         await screen.openAsync();
 
         // Set as current screen if not popup
-        const screenInfo = this.registeredScreens.get(type);
         if (!screenInfo?.isPopup) {
             this.currentScreen = screen;
         }
