@@ -1,9 +1,9 @@
-﻿import { _decorator, Component, UITransform} from 'cc';
+﻿import {_decorator, Component, UITransform} from 'cc';
 
 const {ccclass, property} = _decorator;
 import {UIOpacity} from 'cc';
 import {Node} from 'cc';
-import {ScreenView} from './IScreenView';
+import {ScreenView} from './ScreenView';
 import {UIScreenTransition} from './UIScreenTransition';
 import {BlockInputEvents} from 'cc';
 
@@ -26,26 +26,12 @@ export class BaseView extends Component implements ScreenView {
     uiTransform: UITransform;
 
     onLoad() {
-        if (!this.viewRoot) {
-            this.viewRoot = this.getComponent(UIOpacity);
-        }
-
+        this.viewRoot = this.getComponent(UIOpacity);
         this.uiTransform = this.getComponent(UITransform);
-
-        if (!this.screenTransition) {
-            this.screenTransition = this.getComponent(UIScreenTransition);
-        }
-
-        if (!this.blockInputEvents) {
-            this.blockInputEvents = this.getComponent(BlockInputEvents);
-        }
-
-        if (!this.screenTransition) {
-            console.error(`Cannot find UIScreenTransition component in ${this.node.name} screen`);
-        }
+        this.screenTransition = this.getComponent(UIScreenTransition);
+        this.blockInputEvents = this.getComponent(BlockInputEvents);
 
         this.updateOpacity(0);
-
         this.onLoadedEvent();
         this.isReady = true;
     }

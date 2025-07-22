@@ -1,7 +1,7 @@
 // Main exports
 export { ScreenManager } from './ScreenManager';
 export { ScreenPresenter, ScreenStatus, ScreenType } from './ScreenPresenter';
-export { ScreenView } from './IScreenView';
+export { ScreenView } from './ScreenView';
 export { BaseView } from './BaseView';
 
 

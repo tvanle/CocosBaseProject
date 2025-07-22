@@ -21,7 +21,7 @@ ScreenManager/
 ├── BaseScreenPresenter.ts # Base class cho presenters
 ├── BaseView.ts           # Base class cho views
 ├── ScreenPresenter.ts   # Interface cho presenters
-├── IScreenView.ts        # Interface cho views
+├── ScreenView.ts        # Interface cho views
 ├── ScreenTransition.ts   # Transition effects đơn giản
 └── index.ts             # Export API
 ```

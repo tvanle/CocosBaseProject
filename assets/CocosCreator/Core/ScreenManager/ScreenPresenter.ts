@@ -1,4 +1,4 @@
-﻿import { ScreenView } from './IScreenView';
+﻿import { ScreenView } from './ScreenView';
 
 /**
  * Screen status enum

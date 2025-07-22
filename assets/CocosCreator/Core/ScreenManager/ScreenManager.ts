@@ -1,7 +1,7 @@
 ﻿import { Constructor, instantiate, Prefab, Node } from 'cc';
 import { AssetManager } from '../AssetManager/AssetManager';
 import { ScreenPresenter } from './ScreenPresenter';
-import { ScreenView } from './IScreenView';
+import { ScreenView } from './ScreenView';
 import { RootUI } from './RootUI';
 import { ScreenTransition, TransitionType } from './ScreenTransition';
 
@@ -150,7 +150,7 @@ export class ScreenManager {
 
         // Load prefab with caching
         const prefabPath = screenInfo.path;
-        const prefab = await AssetManager.instance.loadAsync<Prefab>(prefabPath, Prefab);
+        const prefab = await AssetManager.instance.loadAsync<Prefab>(prefabPath);
         const node = instantiate(prefab);
 
         // Set parent based on type
