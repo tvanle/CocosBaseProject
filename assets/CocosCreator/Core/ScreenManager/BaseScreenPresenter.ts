@@ -1,58 +1,97 @@
-import {IScreenPresenter, ScreenStatus, ScreenType} from './IScreenPresenter';
-import { IScreenView } from "db://assets/CocosCreator/Core/ScreenManager/IScreenView";
-import { director,Node } from 'cc';
-import {ScreenHelper} from "db://assets/CocosCreator/Core/ScreenManager/ScreenHelper";
+import { IScreenPresenter, ScreenStatus, ScreenType } from './IScreenPresenter';
+import { IScreenView } from './IScreenView';
 
-// Generic presenter cho View và Model
-export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = any> implements IScreenPresenter{
+/**
+ * Base class for screen presenters with MVP pattern
+ */
+export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = any> implements IScreenPresenter {
     public view: TView | null = null;
-    public screenId = '';
-    public abstract viewName : string;
-    public screenType = ScreenType.Screen;
-    public status = ScreenStatus.None;
     public model: TModel | null = null;
-
-    async setView(view: IScreenView)
-    {
+    public status: ScreenStatus = ScreenStatus.None;
+    public screenType: ScreenType = ScreenType.Screen;
+    public screenId: string = '';
+    /**
+     * Set the view for this presenter
+     */
+    async setView(view: IScreenView): Promise<void> {
         this.view = view as TView;
-        this.screenId = ScreenHelper.getScreenId(view.constructor as { new(): TView });
-        //Todo: await this.view.isReady
+        this.screenId = this.constructor.name;
         this.onViewReady();
     }
 
-    setModel(model: TModel) {
+    /**
+     * Set model data for this presenter
+     */
+    setModel(model: TModel): void {
         this.model = model;
     }
 
-    setViewParent(parent: Node) {
-        this.view.uiTransform.node.parent = parent;
-    }
-
-    getViewParent(): Node | null {
-        return this.view.uiTransform.node.parent;
-    }
-
-    protected onViewReady() {}
-    protected async bindData() {
-    }
-
-    async openAsync() {
+    /**
+     * Open the screen
+     */
+    async openAsync(): Promise<void> {
         if (this.status === ScreenStatus.Opened) return;
+
+        this.status = ScreenStatus.Loading;
         await this.bindData();
         this.status = ScreenStatus.Opened;
-        await this.view.open();
-        this.view.uiTransform.node.setSiblingIndex(-1);
+
+        if (this.view) {
+            await this.view.open();
+        }
+
         this.onOpened();
     }
 
-    async closeAsync() {
+    /**
+     * Close the screen
+     */
+    async closeAsync(): Promise<void> {
         if (this.status === ScreenStatus.Closed) return;
+
         this.status = ScreenStatus.Closed;
-        await this.view.close();
+
+        if (this.view) {
+            await this.view.close();
+        }
+
         this.onClosed();
     }
 
-    onOpened() {}
-    onClosed() {}
-    dispose() {}
+    /**
+     * Called when view is ready - override in child classes
+     */
+    protected onViewReady(): void {
+        // Override in child classes to setup event listeners
+    }
+
+    /**
+     * Called to bind model data to view - override in child classes
+     */
+    protected async bindData(): Promise<void> {
+        // Override in child classes to update UI with model data
+    }
+
+    /**
+     * Called when screen is opened
+     */
+    onOpened(): void {
+        // Can be overridden by child classes
+    }
+
+    /**
+     * Called when screen is closed
+     */
+    onClosed(): void {
+        // Can be overridden by child classes
+    }
+
+    /**
+     * Dispose the screen and clean up resources
+     */
+    dispose(): void {
+        this.status = ScreenStatus.Destroyed;
+        this.view = null;
+        this.model = null;
+    }
 }

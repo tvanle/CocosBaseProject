@@ -30,11 +30,6 @@ export interface IScreenPresenter {
     screenId: string;
 
     /**
-     * Node representing the screen
-     */
-    viewName: string;
-
-    /**
      * Screen type (Screen or Popup)
      */
     screenType: ScreenType;
