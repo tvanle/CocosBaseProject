@@ -4,26 +4,32 @@ Hệ thống Entity Component System (ECS) cho Cocos Creator với Object Pool t
 
 ## Tính năng
 
-- ✅ **Entity-Component Architecture**: Tách biệt data (components) và logic (systems)
+- ✅ **Clean Architecture**: Entity class được tách nhỏ thành ComponentManager và TagManager
+- ✅ **Fluent API**: Chain methods cho code dễ đọc (entity.with().tag().with())
 - ✅ **Object Pool Integration**: Tự động pool entities với archetypes
 - ✅ **Powerful Queries**: Query entities theo components và tags
-- ✅ **Type-safe**: Full TypeScript support
+- ✅ **Type-safe**: Full TypeScript support với generics
 - ✅ **Auto-indexing**: Tự động index components và tags cho query nhanh
-- ✅ **Simple API**: Easy to use với Entities namespace
+- ✅ **Simple API**: Short method names (add, get, remove, has)
 
 ## Architecture
 
 ```
 EntitySystem/
-├── EntityManager.ts      # Core entity management
-├── Components/          # Reusable components
-│   ├── Transform.ts     # Position, rotation, scale
-│   ├── Health.ts        # Health và damage
-│   └── Movement.ts      # Movement và physics
-├── Systems/            # Update logic
+├── Core/               # Core classes
+│   ├── Entity.ts       # Clean entity class
+│   ├── ComponentManager.ts  # Component management
+│   ├── TagManager.ts   # Tag management  
+│   └── IEntityComponent.ts  # Component interface
+├── EntityManager.ts    # Main manager & queries
+├── Components/         # Reusable components
+│   ├── Transform.ts    # Position, rotation, scale
+│   ├── Health.ts       # Health và damage
+│   └── Movement.ts     # Movement và physics
+├── Systems/           # Update logic
 │   ├── MovementSystem.ts  # Handle movement và input
 │   └── HealthSystem.ts    # Health regeneration
-└── Examples/           # Ví dụ sử dụng
+└── Examples/          # Ví dụ sử dụng
     ├── PlayerController.ts
     └── EnemySpawner.ts
 ```
@@ -48,21 +54,36 @@ const enemy = await Entities.create('enemy', parentNode);
 ```typescript
 import { Transform, Health, Movement } from './EntitySystem/Components';
 
-// Add component
-const transform = entity.addComponent(Transform);
+// Add component - clean API
+const transform = entity.add(Transform);
 transform.setPosition(10, 20, 0);
 
 // Add với initial data
-const health = entity.addComponent(Health, {
+const health = entity.add(Health, {
     maxHealth: 100,
     onDeath: () => console.log('Entity died!')
 });
 
-// Chain components
+// Chain components với fluent API
 entity
-    .addComponent(Transform)
-    .addComponent(Health)
-    .addComponent(Movement);
+    .with(Transform)
+    .with(Health, { maxHealth: 100 })
+    .with(Movement, { speed: 5 })
+    .tag('player')
+    .tag('friendly');
+
+// Get component
+const movement = entity.get(Movement);
+
+// Check component
+if (entity.has(Health)) {
+    // Has health component
+}
+
+// Remove component
+entity.remove(Movement);
+// Or chain style
+entity.without(Movement);
 ```
 
 ### 3. Query Entities
@@ -86,9 +107,20 @@ Entities.query()
     .withComponents(Health)
     .withTags('enemy')
     .forEach(entity => {
-        const health = entity.getComponent(Health);
-        health.takeDamage(10);
+        const health = entity.get(Health);
+        health?.takeDamage(10);
     });
+
+// First match
+const player = Entities.query()
+    .withTags('player')
+    .first();
+
+// Count  
+const enemyCount = Entities.query()
+    .withTags('enemy')
+    .withoutTags('dead')
+    .count();
 ```
 
 ### 4. Tạo Custom Components
@@ -202,13 +234,14 @@ export class GameManager extends Component {
     async createPlayer(): Promise<Entity> {
         const player = await Entities.create('player', this.node);
         
-        player.addComponent(Transform);
-        player.addComponent(Health, { maxHealth: 100 });
-        player.addComponent(Movement, { speed: 10 });
-        player.addComponent(Weapon, { damage: 25 });
-        
-        player.addTag('player');
-        player.addTag('friendly');
+        // Clean fluent API
+        player
+            .with(Transform)
+            .with(Health, { maxHealth: 100 })
+            .with(Movement, { speed: 10 })
+            .with(Weapon, { damage: 25 })
+            .tag('player')
+            .tag('friendly');
         
         return player;
     }
@@ -219,13 +252,14 @@ export class GameManager extends Component {
         
         const enemy = await Entities.create('enemy', this.node);
         
-        enemy.addComponent(Transform);
-        enemy.addComponent(Health, { maxHealth: 50 });
-        enemy.addComponent(Movement, { speed: 3 });
-        enemy.addComponent(EnemyAI);
-        
-        enemy.addTag('enemy');
-        enemy.addTag('hostile');
+        // Chain everything
+        enemy
+            .with(Transform)
+            .with(Health, { maxHealth: 50 })
+            .with(Movement, { speed: 3 })
+            .with(EnemyAI)
+            .tag('enemy')
+            .tag('hostile');
     }
 }
 ```
@@ -385,15 +419,30 @@ update() {
 
 ### Entity Methods
 
-- `addComponent(ComponentClass, data?)` - Thêm component
-- `getComponent(ComponentClass)` - Lấy component
-- `removeComponent(ComponentClass)` - Xóa component
-- `hasComponent(ComponentClass)` - Kiểm tra component
-- `getAllComponents()` - Lấy tất cả components
-- `addTag(tag)` - Thêm tag
-- `removeTag(tag)` - Xóa tag
+**Component Management:**
+- `add(ComponentClass, data?)` - Thêm component
+- `get(ComponentClass)` - Lấy component
+- `remove(ComponentClass)` - Xóa component
+- `has(ComponentClass)` - Kiểm tra component
+- `with(ComponentClass, data?)` - Chain-friendly add
+- `without(ComponentClass)` - Chain-friendly remove
+- `components` - Access ComponentManager
+
+**Tag Management:**
+- `tag(tag)` - Thêm tag (chainable)
+- `untag(tag)` - Xóa tag (chainable)
 - `hasTag(tag)` - Kiểm tra tag
+- `tags` - Access TagManager for advanced usage
+
+**Lifecycle:**
+- `enable()` - Enable entity
+- `disable()` - Disable entity
 - `destroy()` - Hủy entity (auto recycle nếu từ pool)
+- `clone(parent?)` - Clone entity với components/tags
+
+**Utilities:**
+- `getDebugInfo()` - Get debug string
+- `update(dt)` - Update all components
 
 ### Query Methods
 
