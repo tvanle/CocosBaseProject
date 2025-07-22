@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Prefab, instantiate, NodePool, warn, error } from 'cc';
-import { AssetManager } from 'db://assets/CocosCreator/Core/AssetManager/AssetManager';
+import { AssetManager } from '../AssetManager';
 const { ccclass } = _decorator;
 
 interface PoolInfo {
@@ -9,7 +9,7 @@ interface PoolInfo {
 }
 
 @ccclass('ObjectPoolManager')
-export class ObjectPoolManager extends Component {
+export class ObjectPoolMnhéanager extends Component {
     private static _instance: ObjectPoolManager | null = null;
     private _pools = new Map<string, PoolInfo>();
 

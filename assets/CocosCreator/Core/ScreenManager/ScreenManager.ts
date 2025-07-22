@@ -1,5 +1,5 @@
 ﻿import { Constructor, instantiate, Prefab, Node } from 'cc';
-import { AssetManager } from '../AssetManager/AssetManager';
+import { AssetManager } from '../AssetManager';
 import { ScreenPresenter } from './ScreenPresenter';
 import { ScreenView } from './ScreenView';
 import { RootUI } from './RootUI';
