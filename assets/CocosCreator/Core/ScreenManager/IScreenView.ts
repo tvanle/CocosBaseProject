@@ -1,16 +1,37 @@
-﻿import * as cc from 'cc';
+﻿import { Component } from 'cc';
 
-export interface IScreenView {
-    uiTransform: cc.UITransform;
-    isReady: boolean;
+/**
+ * Abstract base class for all screen views
+ */
+export abstract class ScreenView extends Component {
+    /**
+     * Called when the screen should open
+     */
+    abstract open(): Promise<void>;
 
-    open(): Promise<void>;
-    close(): Promise<void>;
-    hide(): void;
-    show(): void;
-    destroySelf(): void;
+    /**
+     * Called when the screen should close
+     */
+    abstract close(): Promise<void>;
 
-    viewDidClose: (() => void) | null;
-    viewDidOpen: (() => void) | null;
-    viewDidDestroy: (() => void) | null;
+    /**
+     * Hide the view
+     */
+    hide(): void {
+        this.node.active = false;
+    }
+
+    /**
+     * Show the view
+     */
+    show(): void {
+        this.node.active = true;
+    }
+
+    /**
+     * Destroy the view
+     */
+    destroySelf(): void {
+        this.node.destroy();
+    }
 }

@@ -1,12 +1,9 @@
 // Main exports
 export { ScreenManager } from './ScreenManager';
-export { BaseScreenPresenter } from './BaseScreenPresenter';
+export { ScreenPresenter, ScreenStatus, ScreenType } from './ScreenPresenter';
+export { ScreenView } from './IScreenView';
 export { BaseView } from './BaseView';
 
-// Interfaces and Types
-export type { IScreenPresenter, IScreenPresenterWithModel } from './IScreenPresenter';
-export { ScreenStatus, ScreenType } from './IScreenPresenter';
-export type { IScreenView } from './IScreenView';
 
 // Decorators
 export { Screen, Popup } from './ScreenDecorator';

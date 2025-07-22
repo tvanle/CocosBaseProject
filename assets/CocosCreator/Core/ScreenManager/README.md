@@ -20,7 +20,7 @@ ScreenManager/
 ├── ScreenDecorator.ts     # @Screen và @Popup decorators
 ├── BaseScreenPresenter.ts # Base class cho presenters
 ├── BaseView.ts           # Base class cho views
-├── IScreenPresenter.ts   # Interface cho presenters
+├── ScreenPresenter.ts   # Interface cho presenters
 ├── IScreenView.ts        # Interface cho views
 ├── ScreenTransition.ts   # Transition effects đơn giản
 └── index.ts             # Export API

@@ -1,7 +1,7 @@
 import { ScreenManager } from './ScreenManager';
-import { IScreenPresenter } from './IScreenPresenter';
+import { ScreenPresenter } from './ScreenPresenter';
 
-type ScreenConstructor<T extends IScreenPresenter> = new () => T;
+type ScreenConstructor<T extends ScreenPresenter> = new () => T;
 
 interface ScreenOptions {
     path?: string;
@@ -12,7 +12,7 @@ interface ScreenOptions {
  * Decorator for screen registration
  */
 export function Screen(options?: ScreenOptions) {
-    return function <T extends IScreenPresenter>(constructor: ScreenConstructor<T>) {
+    return function <T extends ScreenPresenter>(constructor: ScreenConstructor<T>) {
         // Auto-register on decorator application
         setTimeout(() => {
             ScreenManager.instance.registerScreen(
@@ -21,7 +21,7 @@ export function Screen(options?: ScreenOptions) {
                 options?.isPopup || false
             );
         }, 0);
-        
+
         return constructor;
     };
 }

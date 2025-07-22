@@ -1,6 +1,7 @@
 ﻿import { Constructor, instantiate, Prefab, Node } from 'cc';
 import { AssetManager } from '../AssetManager/AssetManager';
-import { IScreenPresenter } from './IScreenPresenter';
+import { ScreenPresenter } from './ScreenPresenter';
+import { ScreenView } from './IScreenView';
 import { RootUI } from './RootUI';
 import { ScreenTransition, TransitionType } from './ScreenTransition';
 
@@ -8,13 +9,6 @@ interface OpenScreenOptions {
     model?: any;
     transition?: TransitionType;
     duration?: number;
-    keepInMemory?: boolean;
-}
-
-interface CloseScreenOptions {
-    transition?: TransitionType;
-    duration?: number;
-    keepInMemory?: boolean;
 }
 
 export class ScreenManager {
@@ -24,23 +18,32 @@ export class ScreenManager {
         return this._instance;
     }
 
-    private registeredScreens: Map<Constructor<IScreenPresenter>, { path?: string; isPopup: boolean }> = new Map();
-    private loadedScreens: Map<Constructor<IScreenPresenter>, IScreenPresenter> = new Map();
-    private currentScreen: IScreenPresenter | null = null;
-    private screenRoot: Node;
-    private popupRoot: Node;
-    private hiddenRoot: Node;
+    private registeredScreens = new Map<Constructor<ScreenPresenter>, { path?: string; isPopup: boolean }>();
+    private loadedScreens = new Map<Constructor<ScreenPresenter>, ScreenPresenter>();
+    private currentScreen: ScreenPresenter | null = null;
 
-    init() {
-        this.screenRoot = RootUI.instance.screens;
-        this.popupRoot = RootUI.instance.popups;
-        this.hiddenRoot = RootUI.instance.hiddens;
+    // Lazy initialization of root nodes
+    private _screenRoot: Node | null = null;
+    private _popupRoot: Node | null = null;
+
+    private get screenRoot(): Node {
+        if (!this._screenRoot) {
+            this._screenRoot = RootUI.instance.screens;
+        }
+        return this._screenRoot;
+    }
+
+    private get popupRoot(): Node {
+        if (!this._popupRoot) {
+            this._popupRoot = RootUI.instance.popups;
+        }
+        return this._popupRoot;
     }
 
     /**
      * Register a screen class with decorator
      */
-    registerScreen<T extends IScreenPresenter>(
+    registerScreen<T extends ScreenPresenter>(
         constructor: Constructor<T>,
         path?: string,
         isPopup: boolean = false
@@ -49,9 +52,9 @@ export class ScreenManager {
     }
 
     /**
-     * Open a screen with options
+     * Open a screen - simplified API
      */
-    async openScreen<T extends IScreenPresenter>(
+    async openScreen<T extends ScreenPresenter>(
         type: Constructor<T>,
         options: OpenScreenOptions = {}
     ): Promise<T> {
@@ -62,17 +65,12 @@ export class ScreenManager {
             screen.setModel(options.model);
         }
 
-        // Handle transition
-        if (options.transition !== undefined || options.duration !== undefined) {
+        // Handle transition if specified
+        if (options.transition && screen.view) {
             const transition = new ScreenTransition();
-            transition.type = options.transition || TransitionType.Fade;
+            transition.type = options.transition;
             transition.duration = options.duration || 0.3;
-
-            // Fix: cast screen to any to access view property
-            const screenWithView = screen as any;
-            if (screenWithView.view) {
-                await transition.show(screenWithView.view.node);
-            }
+            await transition.show(screen.view.node);
         }
 
         await screen.openAsync();
@@ -87,37 +85,21 @@ export class ScreenManager {
     }
 
     /**
-     * Open screen with model (shorthand)
+     * Close a screen - simplified API
      */
-    async openScreenWithModel<T extends IScreenPresenter, M extends any>(
+    async closeScreen<T extends ScreenPresenter>(
         type: Constructor<T>,
-        model: M,
-        options: Omit<OpenScreenOptions, 'model'> = {}
-    ): Promise<T> {
-        return this.openScreen(type, { ...options, model });
-    }
-
-    /**
-     * Close a screen
-     */
-    async closeScreen<T extends IScreenPresenter>(
-        type: Constructor<T>,
-        options: CloseScreenOptions = {}
+        transition?: TransitionType
     ): Promise<void> {
         const screen = this.loadedScreens.get(type);
         if (!screen) return;
 
-        // Handle transition
-        if (options.transition !== undefined || options.duration !== undefined) {
-            const transition = new ScreenTransition();
-            transition.type = options.transition || TransitionType.Fade;
-            transition.duration = options.duration || 0.3;
-
-            // Fix: cast screen to any to access view property
-            const screenWithView = screen as any;
-            if (screenWithView.view) {
-                await transition.hide(screenWithView.view.node);
-            }
+        // Handle transition if specified
+        if (transition && screen.view) {
+            const screenTransition = new ScreenTransition();
+            screenTransition.type = transition;
+            screenTransition.duration = 0.3;
+            await screenTransition.hide(screen.view.node);
         }
 
         await screen.closeAsync();
@@ -127,48 +109,34 @@ export class ScreenManager {
             this.currentScreen = null;
         }
 
-        // Remove from memory if not keeping
-        if (!options.keepInMemory) {
-            screen.dispose();
-            this.loadedScreens.delete(type);
-        }
+        // Always dispose for better memory management
+        screen.dispose();
+        this.loadedScreens.delete(type);
     }
 
     /**
      * Check if a screen is currently open
      */
-    isScreenOpen<T extends IScreenPresenter>(type: Constructor<T>): boolean {
+    isScreenOpen<T extends ScreenPresenter>(type: Constructor<T>): boolean {
         const screen = this.loadedScreens.get(type);
-        return screen ? screen.status === 3 /* ScreenStatus.Opened */ : false;
+        return screen?.status === 3; // ScreenStatus.Opened
     }
 
     /**
      * Get the current active screen
      */
-    getCurrentScreen(): IScreenPresenter | null {
+    getCurrentScreen(): ScreenPresenter | null {
         return this.currentScreen;
     }
 
     /**
-     * Close all screens
+     * Get or create screen instance - optimized
      */
-    async closeAll(): Promise<void> {
-        const closePromises: Promise<void>[] = [];
-
-        for (const [type] of this.loadedScreens) {
-            closePromises.push(this.closeScreen(type));
-        }
-
-        await Promise.all(closePromises);
-    }
-
-    /**
-     * Get or create screen instance
-     */
-    private async getOrCreateScreen<T extends IScreenPresenter>(type: Constructor<T>): Promise<T> {
+    private async getOrCreateScreen<T extends ScreenPresenter>(type: Constructor<T>): Promise<T> {
         // Return existing if already loaded
-        if (this.loadedScreens.has(type)) {
-            return this.loadedScreens.get(type) as T;
+        const existing = this.loadedScreens.get(type);
+        if (existing) {
+            return existing as T;
         }
 
         // Get registration info
@@ -180,27 +148,32 @@ export class ScreenManager {
         // Create presenter instance
         const presenter = new type();
 
-        // Load prefab
-        const presenterWithViewName = presenter as any;
-        const prefabPath = screenInfo.path || presenterWithViewName.viewName || type.name;
-        const prefab = await AssetManager.instance.loadAsync<Prefab>(prefabPath);
+        // Load prefab with caching
+        const prefabPath = screenInfo.path;
+        const prefab = await AssetManager.instance.loadAsync<Prefab>(prefabPath, Prefab);
         const node = instantiate(prefab);
 
         // Set parent based on type
         const parentNode = screenInfo.isPopup ? this.popupRoot : this.screenRoot;
         node.setParent(parentNode, false);
 
-        // Set view
-        const viewComponent = node.getComponent(presenterWithViewName.viewName);
-        if (!viewComponent) {
-            throw new Error(`View component ${presenterWithViewName.viewName} not found on ${prefabPath}`);
-        }
-
-        await presenter.setView(viewComponent as any);
+        // Simple setView - just pass the node, let presenter handle view finding
+        await presenter.setView(node.getComponent(ScreenView));
 
         // Cache the screen
         this.loadedScreens.set(type, presenter);
 
         return presenter as T;
+    }
+
+    /**
+     * Dispose all screens and clear cache
+     */
+    dispose(): void {
+        for (const [, screen] of this.loadedScreens) {
+            screen.dispose();
+        }
+        this.loadedScreens.clear();
+        this.currentScreen = null;
     }
 }

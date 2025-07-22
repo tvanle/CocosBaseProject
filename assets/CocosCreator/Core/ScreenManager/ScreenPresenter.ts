@@ -1,20 +1,38 @@
-import { IScreenPresenter, ScreenStatus, ScreenType } from './IScreenPresenter';
-import { IScreenView } from './IScreenView';
+﻿import { ScreenView } from './IScreenView';
 
 /**
- * Base class for screen presenters with MVP pattern
+ * Screen status enum
  */
-export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = any> implements IScreenPresenter {
+export enum ScreenStatus {
+    None = 0,
+    Loading = 1,
+    Closed = 2,
+    Opened = 3,
+    Destroyed = 5
+}
+
+/**
+ * Screen type enum
+ */
+export enum ScreenType {
+    Screen = 0,
+    Popup = 1
+}
+
+/**
+ * Abstract base class for all screen presenters
+ */
+export abstract class ScreenPresenter<TView extends ScreenView = ScreenView, TModel = any> {
     public view: TView | null = null;
     public model: TModel | null = null;
     public status: ScreenStatus = ScreenStatus.None;
-    public screenType: ScreenType = ScreenType.Screen;
     public screenId: string = '';
+
     /**
      * Set the view for this presenter
      */
-    async setView(view: IScreenView): Promise<void> {
-        this.view = view as TView;
+    async setView(view: TView): Promise<void> {
+        this.view = view;
         this.screenId = this.constructor.name;
         this.onViewReady();
     }
@@ -62,28 +80,28 @@ export abstract class BaseScreenPresenter<TView extends IScreenView, TModel = an
      * Called when view is ready - override in child classes
      */
     protected onViewReady(): void {
-        // Override in child classes to setup event listeners
+        // Override in child classes
     }
 
     /**
      * Called to bind model data to view - override in child classes
      */
     protected async bindData(): Promise<void> {
-        // Override in child classes to update UI with model data
+        // Override in child classes
     }
 
     /**
      * Called when screen is opened
      */
     onOpened(): void {
-        // Can be overridden by child classes
+        // Override in child classes
     }
 
     /**
      * Called when screen is closed
      */
     onClosed(): void {
-        // Can be overridden by child classes
+        // Override in child classes
     }
 
     /**

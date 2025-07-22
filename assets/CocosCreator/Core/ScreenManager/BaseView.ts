@@ -3,12 +3,12 @@
 const {ccclass, property} = _decorator;
 import {UIOpacity} from 'cc';
 import {Node} from 'cc';
-import {IScreenView} from './IScreenView';
+import {ScreenView} from './IScreenView';
 import {UIScreenTransition} from './UIScreenTransition';
 import {BlockInputEvents} from 'cc';
 
 @ccclass('BaseView')
-export class BaseView extends Component implements IScreenView {
+export class BaseView extends Component implements ScreenView {
     @property(UIOpacity)
     private viewRoot: UIOpacity | null = null;
 
